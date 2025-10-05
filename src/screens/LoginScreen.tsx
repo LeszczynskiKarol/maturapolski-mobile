@@ -1,4 +1,5 @@
 // src/screens/LoginScreen.tsx
+import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -21,13 +22,6 @@ import { Input } from "../components/ui/Input";
 import { colors, spacing } from "../constants/theme";
 import { api } from "../services/api";
 import { useAuthStore } from "../store/authStore";
-
-// Ikony (możesz użyć react-native-vector-icons lub @expo/vector-icons)
-// Dla przykładu używam prostych emoji
-const MailIcon = () => <Text style={styles.icon}>✉️</Text>;
-const LockIcon = () => <Text style={styles.icon}>🔒</Text>;
-const EyeIcon = () => <Text style={styles.icon}>👁️</Text>;
-const EyeOffIcon = () => <Text style={styles.icon}>🙈</Text>;
 
 const loginSchema = z.object({
   email: z.string().email("Nieprawidłowy adres email"),
@@ -66,6 +60,24 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       console.error("Login error:", error);
+
+      if (error.response?.data?.error === "EMAIL_NOT_VERIFIED") {
+        Alert.alert(
+          "Email niepotwierdzony",
+          "Musisz potwierdzić swój adres email przed zalogowaniem.",
+          [
+            {
+              text: "Wyślij ponownie",
+              onPress: () => {
+                // TODO: Dodaj resend verification
+              },
+            },
+            { text: "OK", style: "cancel" },
+          ]
+        );
+        return;
+      }
+
       const errorMessage =
         error.response?.data?.message ||
         "Błąd logowania. Sprawdź email i hasło.";
@@ -87,12 +99,20 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
             {/* Logo i nagłówek */}
             <View style={styles.header}>
               <Text style={styles.logo}>📚</Text>
-              <Text style={styles.title}>Matura Polski</Text>
+              <LinearGradient
+                colors={[colors.primary.blue, colors.primary.purple]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.titleGradient}
+              >
+                <Text style={styles.title}>Matura Polski</Text>
+              </LinearGradient>
               <Text style={styles.subtitle}>Zaloguj się do swojego konta</Text>
             </View>
 
@@ -109,7 +129,13 @@ export default function LoginScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     keyboardType="email-address"
-                    icon={<MailIcon />}
+                    icon={
+                      <Ionicons
+                        name="mail-outline"
+                        size={20}
+                        color={colors.text.tertiary}
+                      />
+                    }
                     error={errors.email?.message}
                   />
                 )}
@@ -125,8 +151,20 @@ export default function LoginScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry={!showPassword}
-                    icon={<LockIcon />}
-                    rightIcon={showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    icon={
+                      <Ionicons
+                        name="lock-closed-outline"
+                        size={20}
+                        color={colors.text.tertiary}
+                      />
+                    }
+                    rightIcon={
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={20}
+                        color={colors.text.tertiary}
+                      />
+                    }
                     onRightIconPress={() => setShowPassword(!showPassword)}
                     error={errors.password?.message}
                   />
@@ -134,7 +172,7 @@ export default function LoginScreen() {
               />
 
               <TouchableOpacity
-                onPress={() => router.push("/forgot-password")}
+                onPress={() => Alert.alert("Info", "Funkcja w budowie")}
                 style={styles.forgotPassword}
               >
                 <Text style={styles.forgotPasswordText}>
@@ -168,7 +206,7 @@ export default function LoginScreen() {
             <View style={styles.footer}>
               <Text style={styles.footerText}>Nie masz konta? </Text>
               <TouchableOpacity onPress={() => router.push("/register")}>
-                <Text style={styles.footerLink}>Zarejestruj się</Text>
+                <Text style={styles.footerLink}>Zarejestruj się za darmo</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -203,16 +241,21 @@ const styles = StyleSheet.create({
     fontSize: 64,
     marginBottom: spacing.md,
   },
+  titleGradient: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 12,
+  },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
+    color: colors.text.white,
   },
   subtitle: {
     fontSize: 16,
     color: colors.text.secondary,
     textAlign: "center",
+    marginTop: spacing.sm,
   },
   formCard: {
     marginBottom: spacing.lg,
@@ -254,8 +297,5 @@ const styles = StyleSheet.create({
     color: colors.primary.blue,
     fontSize: 14,
     fontWeight: "600",
-  },
-  icon: {
-    fontSize: 20,
   },
 });

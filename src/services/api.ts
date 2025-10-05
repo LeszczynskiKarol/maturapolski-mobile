@@ -4,9 +4,7 @@ import * as SecureStore from "expo-secure-store";
 
 // Zmień na swoje lokalne IP dla development
 // lub na domenę produkcyjną
-const API_URL = __DEV__
-  ? "http://10.227.170.95" // ZMIEŃ NA SWOJE IP!
-  : "https://api.maturapolski.pl";
+const API_URL = "https://api.maturapolski.pl";
 
 const api = axios.create({
   baseURL: API_URL,

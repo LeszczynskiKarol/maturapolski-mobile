@@ -2,27 +2,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
-import { useAuthStore } from "../src/store/authStore";
+import React from "react";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const initAuth = useAuthStore((state) => state.initAuth);
-  const isLoading = useAuthStore((state) => state.isLoading);
-
-  useEffect(() => {
-    initAuth();
-  }, []);
-
-  if (isLoading) {
-    // Możesz tutaj dodać splash screen lub loading indicator
-    return null;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -30,6 +17,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="welcome" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
         <Stack.Screen name="(tabs)" />

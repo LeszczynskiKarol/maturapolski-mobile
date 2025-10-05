@@ -94,6 +94,7 @@ export default function RegisterScreen() {
         email: data.email,
         username: data.username,
         password: data.password,
+        recaptchaToken: "MOBILE_DEV",
       });
 
       Alert.alert("Sukces!", "Konto utworzone! Sprawdź swoją skrzynkę email.", [
