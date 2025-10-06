@@ -28,7 +28,6 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-// ✅ Custom storage dla React Native z SecureStore
 const secureStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
@@ -68,8 +67,13 @@ export const useAuthStore = create<AuthState>()(
         set({ user, isAuthenticated: true });
       },
 
-      setTokens: (tokens) => {
+      setTokens: async (tokens) => {
         console.log("Setting tokens");
+
+        // ✅ ZAPISZ TOKEN RÓWNIEŻ OSOBNO dla api.ts
+        await SecureStore.setItemAsync("authToken", tokens.token);
+        await SecureStore.setItemAsync("refreshToken", tokens.refreshToken);
+
         set({
           token: tokens.token,
           refreshToken: tokens.refreshToken,
@@ -77,9 +81,15 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      // ✅ Async metoda - ustaw wszystko na raz
       setAuth: async (data) => {
         console.log("Setting complete auth data:", data.user.email);
+
+        // ✅ KLUCZOWE - zapisz tokeny osobno dla api.ts
+        await SecureStore.setItemAsync("authToken", data.token);
+        await SecureStore.setItemAsync("refreshToken", data.refreshToken);
+
+        console.log("Tokens saved to SecureStore");
+
         set({
           user: data.user,
           token: data.token,
@@ -88,16 +98,20 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      // ✅ Async logout
       logout: async () => {
         console.log("Logging out...");
+
+        // ✅ Usuń tokeny z obu miejsc
+        await SecureStore.deleteItemAsync("authToken");
+        await SecureStore.deleteItemAsync("refreshToken");
+        await SecureStore.deleteItemAsync("auth-storage");
+
         set({
           user: null,
           token: null,
           refreshToken: null,
           isAuthenticated: false,
         });
-        await SecureStore.deleteItemAsync("auth-storage");
       },
     }),
     {
@@ -109,8 +123,15 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => async (state) => {
         console.log("Rehydrated auth state:", state?.user?.email || "no user");
+
+        // ✅ Po rehydracji, przywróć również oddzielne tokeny
+        if (state?.token && state?.refreshToken) {
+          await SecureStore.setItemAsync("authToken", state.token);
+          await SecureStore.setItemAsync("refreshToken", state.refreshToken);
+          console.log("Tokens restored to SecureStore after rehydration");
+        }
       },
     }
   )

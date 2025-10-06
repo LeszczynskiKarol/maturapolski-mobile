@@ -1,9 +1,7 @@
-// src/services/api.ts - mobile
+// src/services/api.ts
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-// Zmień na swoje lokalne IP dla development
-// lub na domenę produkcyjną
 const API_URL = "https://api.maturapolski.pl";
 
 const api = axios.create({
@@ -11,15 +9,26 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false, // Mobile nie używa cookies
+  withCredentials: false,
 });
 
-// Request interceptor - dodaje token do każdego zapytania
+// Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync("authToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      console.log(
+        "Request:",
+        config.method?.toUpperCase(),
+        config.url,
+        "Has token:",
+        !!token
+      );
+    } catch (error) {
+      console.error("Error getting token:", error);
     }
     return config;
   },
@@ -28,13 +37,12 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - obsługa błędów i refresh tokenu
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Jeśli 401 i nie próbowaliśmy jeszcze refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -42,25 +50,20 @@ api.interceptors.response.use(
         const refreshToken = await SecureStore.getItemAsync("refreshToken");
 
         if (!refreshToken) {
-          // Brak refresh tokenu - wyloguj
           await SecureStore.deleteItemAsync("authToken");
           await SecureStore.deleteItemAsync("refreshToken");
           return Promise.reject(error);
         }
 
-        // Spróbuj odświeżyć token
         const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
           refreshToken,
         });
 
-        // Zapisz nowy token
         await SecureStore.setItemAsync("authToken", data.token);
-
-        // Powtórz oryginalne zapytanie z nowym tokenem
         originalRequest.headers.Authorization = `Bearer ${data.token}`;
+
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh nie udał się - wyloguj
         await SecureStore.deleteItemAsync("authToken");
         await SecureStore.deleteItemAsync("refreshToken");
         return Promise.reject(refreshError);
