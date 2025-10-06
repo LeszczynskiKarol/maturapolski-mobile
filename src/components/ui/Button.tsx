@@ -7,6 +7,7 @@ import {
   Text,
   TextStyle,
   TouchableOpacity,
+  View,
   ViewStyle,
 } from "react-native";
 import { borderRadius, colors, spacing } from "../../constants/theme";
@@ -19,6 +20,7 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
+  icon?: React.ReactNode; // ✅ DODANE
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -31,6 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   loading = false,
   disabled = false,
   fullWidth = false,
+  icon, // ✅ DODANE
   style,
   textStyle,
 }) => {
@@ -45,16 +48,19 @@ export const Button: React.FC<ButtonProps> = ({
           }
         />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            styles[`text_${variant}`],
-            styles[`text_${size}`],
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.content}>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text
+            style={[
+              styles.text,
+              styles[`text_${variant}`],
+              styles[`text_${size}`],
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </>
   );
@@ -114,6 +120,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: borderRadius.md,
+  },
+  // ✅ DODANE - dla ikony
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  iconContainer: {
+    // Ikona po lewej stronie
   },
   button_small: {
     paddingHorizontal: spacing.md,

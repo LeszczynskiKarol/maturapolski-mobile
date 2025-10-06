@@ -1,4 +1,5 @@
 // src/screens/RegisterScreen.tsx
+import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -19,6 +20,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { colors, spacing } from "../constants/theme";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
 import { api } from "../services/api";
 
 // Ikony
@@ -51,6 +53,9 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // ✅ Google Auth Hook
+  const { signInWithGoogle, isLoading: isGoogleLoading } = useGoogleAuth();
 
   const {
     control,
@@ -97,12 +102,11 @@ export default function RegisterScreen() {
         recaptchaToken: "MOBILE_DEV",
       });
 
-      Alert.alert("Sukces!", "Konto utworzone! Sprawdź swoją skrzynkę email.", [
-        {
-          text: "OK",
-          onPress: () => router.replace("/login"),
-        },
-      ]);
+      // ✅ Przekieruj na ekran weryfikacji
+      router.push({
+        pathname: "/(auth)/verify-email",
+        params: { email: data.email },
+      });
     } catch (error: any) {
       console.error("Registration error:", error);
       const errorMessage =
@@ -136,6 +140,28 @@ export default function RegisterScreen() {
 
             {/* Formularz */}
             <Card style={styles.formCard}>
+              {/* ✅ GOOGLE SIGN-IN NA GÓRZE */}
+              <Button
+                title="Zarejestruj przez Google"
+                onPress={signInWithGoogle}
+                variant="outline"
+                fullWidth
+                loading={isGoogleLoading}
+                icon={
+                  <Ionicons
+                    name="logo-google"
+                    size={20}
+                    color={colors.text.primary}
+                  />
+                }
+              />
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>lub</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
               <Controller
                 control={control}
                 name="username"
@@ -262,25 +288,12 @@ export default function RegisterScreen() {
                 fullWidth
                 size="large"
               />
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>lub</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <Button
-                title="Zarejestruj przez Google"
-                onPress={() => Alert.alert("Google Sign Up", "Coming soon!")}
-                variant="outline"
-                fullWidth
-              />
             </Card>
 
             {/* Link do logowania */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Masz już konto? </Text>
-              <TouchableOpacity onPress={() => router.push("/login")}>
+              <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
                 <Text style={styles.footerLink}>Zaloguj się</Text>
               </TouchableOpacity>
             </View>
@@ -343,6 +356,21 @@ const styles = StyleSheet.create({
   formCard: {
     marginBottom: spacing.lg,
   },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border.light,
+  },
+  dividerText: {
+    marginHorizontal: spacing.md,
+    color: colors.text.secondary,
+    fontSize: 14,
+  },
   passwordStrength: {
     marginBottom: spacing.md,
   },
@@ -396,21 +424,6 @@ const styles = StyleSheet.create({
   termsLink: {
     color: colors.primary.blue,
     fontWeight: "600",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border.light,
-  },
-  dividerText: {
-    marginHorizontal: spacing.md,
-    color: colors.text.secondary,
-    fontSize: 14,
   },
   footer: {
     flexDirection: "row",

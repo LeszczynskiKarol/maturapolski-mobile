@@ -1,4 +1,4 @@
-// src/screens/LoginScreen.tsx
+// src/screens/LoginScreen.tsx - Z GOOGLE SIGN-IN
 import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,6 +20,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { colors, spacing } from "../constants/theme";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
 import { api } from "../services/api";
 import { useAuthStore } from "../store/authStore";
 
@@ -35,13 +36,47 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  // ✅ Google Auth Hook
+  const {
+    signInWithGoogle,
+    isLoading: isGoogleLoading,
+    isReady,
+  } = useGoogleAuth();
+
+  console.log("Google Sign-In ready:", isReady);
+
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  const email = watch("email");
+
+  const handleResendVerification = async () => {
+    try {
+      await api.post("/api/auth/resend-verification", { email });
+
+      router.push({
+        pathname: "/(auth)/verify-email",
+        params: { email },
+      });
+    } catch (error: any) {
+      console.error("Resend error:", error);
+
+      if (error.response?.data?.error === "RATE_LIMIT") {
+        Alert.alert("Zbyt wiele prób", error.response.data.message);
+      } else {
+        Alert.alert(
+          "Błąd",
+          error.response?.data?.message || "Nie udało się wysłać emaila"
+        );
+      }
+    }
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -55,7 +90,6 @@ export default function LoginScreen() {
           refreshToken: response.data.refreshToken || "",
         });
 
-        // Przekieruj na dashboard
         router.replace("/(tabs)/dashboard");
       }
     } catch (error: any) {
@@ -67,12 +101,10 @@ export default function LoginScreen() {
           "Musisz potwierdzić swój adres email przed zalogowaniem.",
           [
             {
-              text: "Wyślij ponownie",
-              onPress: () => {
-                // TODO: Dodaj resend verification
-              },
+              text: "Wyślij kod ponownie",
+              onPress: handleResendVerification,
             },
-            { text: "OK", style: "cancel" },
+            { text: "Anuluj", style: "cancel" },
           ]
         );
         return;
@@ -172,7 +204,7 @@ export default function LoginScreen() {
               />
 
               <TouchableOpacity
-                onPress={() => Alert.alert("Info", "Funkcja w budowie")}
+                onPress={() => router.push("/(auth)/forgot-password")}
                 style={styles.forgotPassword}
               >
                 <Text style={styles.forgotPasswordText}>
@@ -187,25 +219,41 @@ export default function LoginScreen() {
                 fullWidth
                 size="large"
               />
-
+              {/* 
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
                 <Text style={styles.dividerText}>lub</Text>
                 <View style={styles.dividerLine} />
               </View>
+              {!isReady && (
+                <Text style={{ color: "red" }}>Google not ready</Text>
+              )}
 
+              ✅ GOOGLE SIGN-IN BUTTON
               <Button
                 title="Zaloguj przez Google"
-                onPress={() => Alert.alert("Google Login", "Coming soon!")}
+                onPress={() => {
+                  console.log("🔵 Button clicked!");
+                  console.log("🔵 Is ready:", isReady);
+                  signInWithGoogle();
+                }}
                 variant="outline"
                 fullWidth
-              />
+                loading={isGoogleLoading}
+                icon={
+                  <Ionicons
+                    name="logo-google"
+                    size={20}
+                    color={colors.text.primary}
+                  />
+                }
+              /> */}
             </Card>
 
             {/* Link do rejestracji */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Nie masz konta? </Text>
-              <TouchableOpacity onPress={() => router.push("/register")}>
+              <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
                 <Text style={styles.footerLink}>Zarejestruj się za darmo</Text>
               </TouchableOpacity>
             </View>

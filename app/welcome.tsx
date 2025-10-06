@@ -83,7 +83,7 @@ export default function WelcomeScreen() {
         <Animated.View style={[styles.buttonsContainer, { opacity: fadeAnim }]}>
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => router.push("/register")}
+            onPress={() => router.push("/(auth)/register")}
             activeOpacity={0.8}
           >
             <Text style={styles.primaryButtonText}>Rozpocznij za darmo</Text>
@@ -91,7 +91,7 @@ export default function WelcomeScreen() {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => router.push("/login")}
+            onPress={() => router.push("/(auth)/login")}
             activeOpacity={0.8}
           >
             <Text style={styles.secondaryButtonText}>

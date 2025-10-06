@@ -1,4 +1,4 @@
-// app/(tabs)/learn.tsx
+// app/(tabs)/learn.tsx - mobile
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button } from "../../src/components/ui/Button";
